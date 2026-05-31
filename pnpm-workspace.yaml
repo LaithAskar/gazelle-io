@@ -3,4 +3,7 @@ packages:
   - "packages/*"
   - "packages/agents/*"
   - "scripts/*"
+allowBuilds:
+  esbuild: true
+
 # Note: apps/ios is a SwiftUI/Xcode project, NOT a JS workspace — excluded on purpose.

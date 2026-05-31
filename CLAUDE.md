@@ -98,8 +98,10 @@ Copy `.env.example` to `.env.local` and fill in real values locally. Required ke
 - Supabase: **schema, RLS, and storage applied & verified 2026-05-30.** The live project (`gazelle-io`, ref `dnxoosoiukvprclmkyuc`) was found EMPTY despite the original handoff claiming it was initialized — the schema was authored from the spec, reviewed by the architect, and applied. 12 tables, pgvector v0.8.0, RLS on all 12 tables, 2 private storage buckets. The SQL files in `docs/supabase/` are now authoritative and match the live DB. **Do NOT re-run them.**
 - Embedding provider: **Voyage AI `voyage-3.5` (1024 dims)** — supersedes the spec's nonexistent "Anthropic embeddings API." Requires `VOYAGE_API_KEY`.
 - Grade encoding: **0–6 where 0 = Kindergarten** (honors "Full K-6"; the original partial SQL's `1–6` excluded K).
-- Repo: ready for Turborepo scaffold.
-- Build: **not started.** First step is the scaffold below.
+- Repo: Turborepo (pnpm) scaffolded. git initialized on `main`.
+- **Phase 0 (scaffold): ✅ done.**
+- **Phase 1 (shared foundation): ✅ done.** `packages/shared` (types generated from live schema + enums + Zod env validation), `packages/db` (anon + service-role clients, typed query helpers). Verified: type-check clean, both clients connect to the live DB, env validation fails fast. `.env.local` populated locally (gitignored) with live Supabase values; ANTHROPIC + VOYAGE keys are still placeholders — replace before Phase 2/3.
+- **Phase 2 (RAG pipeline): ⏭️ next.**
 Update this section as phases complete.
 ---
 ## First Action
