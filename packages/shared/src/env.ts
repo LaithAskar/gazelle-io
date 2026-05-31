@@ -17,8 +17,16 @@ export const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
-export const serverEnvSchema = clientEnvSchema.extend({
+// Just the Supabase vars a server-side DB client needs — deliberately NOT the
+// LLM/scraper keys, so DB-only code (migrations, seeds, queries) doesn't require
+// ANTHROPIC/VOYAGE/APIFY to be present.
+export const supabaseServerSchema = clientEnvSchema.extend({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+});
+
+// Full server env — validate this at app/agent startup to fail fast on anything
+// missing across the whole server surface.
+export const serverEnvSchema = supabaseServerSchema.extend({
   ANTHROPIC_API_KEY: z.string().min(1),
   VOYAGE_API_KEY: z.string().min(1),
   // Apify is post-MVP (curriculum scraping); optional so MVP boots without it.
@@ -26,6 +34,7 @@ export const serverEnvSchema = clientEnvSchema.extend({
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
+export type SupabaseServerEnv = z.infer<typeof supabaseServerSchema>;
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 type EnvSource = Record<string, string | undefined>;
@@ -51,6 +60,11 @@ function parseOrThrow<T extends z.ZodTypeAny>(
 /** Validate the client-safe (NEXT_PUBLIC_*) env. Safe to call in the browser. */
 export function parseClientEnv(source: EnvSource = process.env): ClientEnv {
   return parseOrThrow(clientEnvSchema, source, "client");
+}
+
+/** Validate only the Supabase vars a server-side DB client needs. Server-only. */
+export function parseSupabaseServerEnv(source: EnvSource = process.env): SupabaseServerEnv {
+  return parseOrThrow(supabaseServerSchema, source, "Supabase server");
 }
 
 /** Validate the full server env. Server-side ONLY — never call from client code. */

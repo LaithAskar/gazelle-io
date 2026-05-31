@@ -40,7 +40,21 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  packages/rag: {}
+  packages/rag:
+    dependencies:
+      '@gazelle/db':
+        specifier: workspace:*
+        version: link:../db
+      '@gazelle/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.41
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
 
   packages/shared:
     dependencies:

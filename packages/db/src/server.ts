@@ -9,11 +9,11 @@
 // a client bundle.
 
 import { createClient } from "@supabase/supabase-js";
-import { parseServerEnv, type Database } from "@gazelle/shared";
+import { parseSupabaseServerEnv, type Database } from "@gazelle/shared";
 import type { GazelleClient } from "./client";
 
 export function createServiceRoleClient(
-  env: ReturnType<typeof parseServerEnv> = parseServerEnv(),
+  env: ReturnType<typeof parseSupabaseServerEnv> = parseSupabaseServerEnv(),
 ): GazelleClient {
   if (typeof (globalThis as Record<string, unknown>).window !== "undefined") {
     throw new Error(

@@ -541,6 +541,23 @@ export type Database = {
     Functions: {
       current_parent_id: { Args: never; Returns: string }
       current_teacher_id: { Args: never; Returns: string }
+      match_curriculum_knowledge: {
+        Args: {
+          filter_grade?: number
+          filter_subject?: string
+          match_count?: number
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          grade: number
+          id: string
+          similarity: number
+          source: string
+          standard_id: string
+          subject: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
