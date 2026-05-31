@@ -1,0 +1,6 @@
+packages:
+  - "apps/web"
+  - "packages/*"
+  - "packages/agents/*"
+  - "scripts/*"
+# Note: apps/ios is a SwiftUI/Xcode project, NOT a JS workspace — excluded on purpose.
