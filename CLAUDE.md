@@ -100,8 +100,10 @@ Copy `.env.example` to `.env.local` and fill in real values locally. Required ke
 - Grade encoding: **0–6 where 0 = Kindergarten** (honors "Full K-6"; the original partial SQL's `1–6` excluded K).
 - Repo: Turborepo (pnpm) scaffolded. git initialized on `main`.
 - **Phase 0 (scaffold): ✅ done.**
-- **Phase 1 (shared foundation): ✅ done.** `packages/shared` (types generated from live schema + enums + Zod env validation), `packages/db` (anon + service-role clients, typed query helpers). Verified: type-check clean, both clients connect to the live DB, env validation fails fast. `.env.local` populated locally (gitignored) with live Supabase values; ANTHROPIC + VOYAGE keys are still placeholders — replace before Phase 2/3.
-- **Phase 2 (RAG pipeline): ⏭️ next.**
+- **Phase 1 (shared foundation): ✅ done.** `packages/shared` (types generated from live schema + enums + Zod env validation), `packages/db` (anon + service-role clients, typed query helpers). Verified: type-check clean, both clients connect to the live DB, env validation fails fast.
+- **Phase 2 (RAG pipeline): ✅ done & verified.** `packages/rag` (Voyage voyage-3.5 embeddings via REST, ~500-token chunker, batched ingest, semantic search via `match_curriculum_knowledge` RPC). Seeded 22 real Common Core standards (K-6, math+ELA) into `curriculum_knowledge`. Verified: semantic search returns correct standards by meaning. NOTE: Voyage free tier is 3 RPM until a payment method is added (200M free tokens still apply) — raise this before heavy agent testing. **Apify scraping deferred** (seeded directly instead).
+- `.env.local` (gitignored) now holds live Supabase values + real ANTHROPIC + VOYAGE keys. APIFY key still pending (post-MVP).
+- **Phase 3 (Mastra agents): ⏭️ next.** Use model id `claude-sonnet-4-6` (spec's `claude-sonnet-4` is stale).
 Update this section as phases complete.
 ---
 ## First Action
