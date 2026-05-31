@@ -1,5 +1,5 @@
 {
-  "name": "@gazelle/agent-planner",
+  "name": "@gazelle/agent-core",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@gazelle/agent-core": "workspace:*",
+    "@ai-sdk/anthropic": "^1.2.0",
     "@gazelle/db": "workspace:*",
     "@gazelle/rag": "workspace:*",
     "@gazelle/shared": "workspace:*",
