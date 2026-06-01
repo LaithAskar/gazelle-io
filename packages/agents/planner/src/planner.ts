@@ -18,16 +18,18 @@ import {
   generatedQuestionBankSchema,
   type GeneratedLessonPlan,
 } from "./schema";
-import { searchCurriculumStandardsTool, searchCurriculumKnowledgeTool } from "./tools";
 
 function gradeLabel(grade: number): string {
   return grade === 0 ? "Kindergarten" : `Grade ${grade}`;
 }
 
+// NOTE: RAG grounding is fetched deterministically in runPlanner (one embed),
+// so the Planner agent does NOT carry autonomous RAG tools — that avoids a
+// redundant second Voyage embed per generation (and the free-tier 3 RPM 429s).
+// The tool definitions remain exported from ./tools for reuse.
 export const plannerAgent: Agent = new Agent({
   name: "Planner",
   model: agentModel(),
-  tools: { searchCurriculumStandardsTool, searchCurriculumKnowledgeTool },
   instructions: `You are the Planner, an expert K-6 curriculum designer for teachers.
 You generate Common Core-aligned lesson plans. Ground every plan in the provided
 standards and knowledge — never invent standards. Structure each plan as

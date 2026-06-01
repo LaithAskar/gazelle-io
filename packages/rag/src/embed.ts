@@ -14,6 +14,8 @@ export interface EmbedOptions {
   inputType?: "document" | "query";
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export async function embedTexts(
   texts: string[],
   opts: EmbedOptions = {},
@@ -22,28 +24,38 @@ export async function embedTexts(
   const apiKey = opts.apiKey ?? process.env.VOYAGE_API_KEY;
   if (!apiKey) throw new Error("VOYAGE_API_KEY is not set (required for embeddings).");
 
-  const res = await fetch(VOYAGE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: EMBEDDING_MODEL,
-      input: texts,
-      input_type: opts.inputType ?? "document",
-    }),
-  });
+  // Retry on 429 (Voyage free tier is 3 RPM until a payment method is added).
+  // Backoff respects Retry-After when present; capped so web requests don't hang.
+  const maxAttempts = 3;
+  const backoffsMs = [4000, 10000];
 
-  if (!res.ok) {
-    throw new Error(`Voyage embeddings failed (${res.status}): ${await res.text()}`);
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const res = await fetch(VOYAGE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: EMBEDDING_MODEL,
+        input: texts,
+        input_type: opts.inputType ?? "document",
+      }),
+    });
+
+    if (res.ok) {
+      const json = (await res.json()) as { data: { embedding: number[]; index: number }[] };
+      return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
+    }
+
+    const body = await res.text();
+    const isLast = attempt === maxAttempts - 1;
+    if (res.status === 429 && !isLast) {
+      const retryAfter = Number(res.headers.get("retry-after"));
+      const waitMs = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoffsMs[attempt]!;
+      await sleep(waitMs);
+      continue;
+    }
+    throw new Error(`Voyage embeddings failed (${res.status}): ${body}`);
   }
-
-  const json = (await res.json()) as {
-    data: { embedding: number[]; index: number }[];
-  };
-  // Preserve input order regardless of how the API returns them.
-  return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
+  throw new Error("Voyage embeddings failed after retries.");
 }
 
 export async function embedQuery(query: string, apiKey?: string): Promise<number[]> {
