@@ -30,6 +30,14 @@ Set them for **Production** (and Preview if you want PR previews).
 Click **Deploy**. First build takes a few minutes. You'll get a URL like
 `https://gazelle-io.vercel.app`.
 
+### Confirm Fluid Compute is on (free-plan timeout fix)
+Lesson generation takes ~15–30s (Claude + Voyage). The Hobby default function
+limit is 10s, but **Fluid Compute** raises it to **60s** — and it's the default
+for new projects (since Apr 2025). The agent routes already set `maxDuration=60`.
+- Verify at **Project → Settings → Functions → Fluid Compute = Enabled**.
+- If it's off, toggle it on and redeploy. (This is why we did NOT need Vercel Pro
+  or an async-generation refactor.)
+
 ## 4. Point Supabase Auth at the deployed URL
 In the Supabase dashboard → **Authentication → URL Configuration**:
 - **Site URL:** `https://<your-vercel-domain>`
