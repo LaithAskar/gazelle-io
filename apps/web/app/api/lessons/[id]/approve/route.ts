@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // generateQuestionBank is a Claude call (see DEPLOY.md)
 
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
   const current = await getCurrentTeacher();

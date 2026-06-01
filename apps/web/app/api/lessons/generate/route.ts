@@ -4,6 +4,9 @@ import { getCurrentTeacher } from "@/lib/current-teacher";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Planner does a Voyage embed + a Claude generation — well over the Hobby 10s
+// cap. Honored on Vercel Pro; on Hobby this route will time out (see DEPLOY.md).
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   const current = await getCurrentTeacher();

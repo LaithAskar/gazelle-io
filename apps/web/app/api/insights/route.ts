@@ -4,6 +4,7 @@ import { getCurrentTeacher } from "@/lib/current-teacher";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60; // Curriculum agent Claude call (see DEPLOY.md)
 
 export async function POST() {
   const current = await getCurrentTeacher();
