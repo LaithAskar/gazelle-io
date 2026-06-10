@@ -1,0 +1,6 @@
+// Copy to Config.local.xcconfig and fill locally. Do not commit real keys.
+GAZELLE_API_BASE_URL = https:/$()/your-vercel-app.vercel.app
+SUPABASE_URL = https:/$()/YOUR-PROJECT.supabase.co
+SUPABASE_ANON_KEY = YOUR_SUPABASE_ANON_KEY
+GAZELLE_PRODUCT_BUNDLE_IDENTIFIER = io.gazelle.app
+DEVELOPMENT_TEAM = YOUR_TEAM_ID

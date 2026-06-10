@@ -99,6 +99,8 @@ const feedbackSchema = z.object({
 
 export interface SessionStart {
   sessionId: string;
+  /** agent_logs id for the approved generated question; clients send this back when answering. */
+  questionId: string;
   question: GeneratedQuestion;
 }
 
@@ -125,7 +127,19 @@ export async function startTutorSession(args: { studentId: string }): Promise<Se
     plan,
     difficulty: student.pace === "fast" ? "medium" : "easy",
   });
-  return { sessionId: session.id, question };
+  const verdict = await reviewAndLog(db, {
+    agent: "tutor",
+    input: { studentId: args.studentId, lessonPlanId: plan?.id ?? null, difficulty: question.difficulty },
+    output: question,
+    strict: true,
+    studentId: args.studentId,
+    sessionId: session.id,
+  });
+  if (!verdict.approved) {
+    throw new ContentRejectedError(verdict.filter.flags);
+  }
+
+  return { sessionId: session.id, questionId: verdict.logId, question };
 }
 
 export async function generateQuestion(args: {
