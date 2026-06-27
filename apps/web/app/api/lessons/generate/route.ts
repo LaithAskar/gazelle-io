@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runPlanner } from "@gazelle/agent-planner";
 import { getCurrentTeacher } from "@/lib/current-teacher";
+import { checkAgentRateLimit, rateLimitResponseInit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,14 @@ export async function POST(req: Request) {
   const current = await getCurrentTeacher();
   if (!current?.teacher) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rl = await checkAgentRateLimit(current.teacher.id);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      rateLimitResponseInit(rl.retryAfterSeconds),
+    );
   }
 
   const body = await req.json().catch(() => null);
@@ -34,9 +43,8 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ id: lessonPlan.id });
   } catch (e) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : "Generation failed" },
-      { status: 500 },
-    );
+    // Log the detail server-side; return a generic message (don't leak internals).
+    console.error("[lessons/generate] failed:", e);
+    return NextResponse.json({ error: "Generation failed. Please try again." }, { status: 500 });
   }
 }

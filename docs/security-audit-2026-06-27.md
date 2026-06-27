@@ -144,3 +144,52 @@ missed later.
 Items #5 and #6 are safe, additive changes I can make right away. Items #1–#4
 touch product behavior (or need a new library / a Supabase setting change), so
 they need your sign-off first per the project's checkpoint rule.
+
+---
+
+## Remediation status (2026-06-27)
+
+Implemented in code on branch `claude/gazelle-security-audit-i39dcf`
+(type-check + `next build` pass; no migrations touched):
+
+- **#1 Rate limiting — DONE.** `apps/web/lib/rate-limit.ts` caps each teacher at
+  8 AI calls/minute and 100/day, enforced on all three agent routes (429 +
+  `Retry-After`). No new library: it counts the rows agents already write to
+  `agent_logs`, via the service role.
+- **#3 Prompt-injection hardening — DONE.** Untrusted teacher input (Planner) and
+  student answers (Tutor) are now wrapped in `<teacher_input>` / `<student_answer>`
+  delimiters, and both agents' system instructions tell them to treat that text
+  as data, never as instructions.
+- **#4 Student-input PII — DONE.** New `redactPII()` scrubs emails/phones/SSNs
+  from a student's answer before it is sent to the model, logged, or stored in
+  `session_responses`.
+- **#5 Security headers — DONE.** `next.config.mjs` now sets CSP, `X-Frame-Options:
+  DENY`, `nosniff`, `Referrer-Policy`, HSTS, and `Permissions-Policy` on every
+  response.
+- **#6 Error sanitization — DONE.** Agent routes log details server-side and
+  return a generic message instead of raw exception text.
+- **#2 Signup (email confirmation path) — DONE in code.** The auth page now
+  supports the email-confirmation flow: it stores the teacher's name in user
+  metadata at sign-up, shows a "check your email" notice when no session is
+  returned, and finishes profile bootstrap idempotently on first sign-in. Works
+  whether or not auto-confirm is on.
+
+### ⚠️ Still requires the architect (cannot be done from code here)
+
+- **Turn OFF `mailer_autoconfirm`** in the Supabase dashboard
+  (Authentication → Providers → Email → "Confirm email"). Until this is flipped,
+  signup is still auto-confirmed and the email-confirmation code path above stays
+  dormant. (Note: the live project currently has auto-confirm ON — see CLAUDE.md.)
+- **#2 role self-assignment — FLAGGED, NOT changed.** The `users_insert_own` RLS
+  policy lets a user insert their own row with any `role`. Tightening this means
+  editing the live RLS policy (`002_rls_policies.sql`), which the project's
+  Locked Decisions forbid touching without architect sign-off. Recommended change
+  for your review (apply manually if approved):
+
+  ```sql
+  -- Restrict self-insert to the non-privileged roles a client may self-assign.
+  DROP POLICY "users_insert_own" ON users;
+  CREATE POLICY "users_insert_own" ON users FOR INSERT
+    WITH CHECK (id = auth.uid() AND role IN ('teacher', 'parent'));
+  -- (Or move role assignment server-side entirely and drop client INSERT.)
+  ```
