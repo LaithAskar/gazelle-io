@@ -62,9 +62,22 @@ final class GazelleAPIClient {
         ))
     }
 
-    func endSession(sessionId: String) async throws -> TutorSession {
+    func nextQuestion(sessionId: String, studentId: String) async throws -> TutorNextQuestion {
+        try await request(path: "/api/sessions/next", method: "POST", body: NextQuestionRequest(sessionId: sessionId, studentId: studentId))
+    }
+
+    func endSession(sessionId: String) async throws -> (session: TutorSession, streakDays: Int) {
         let response: EndSessionResponse = try await request(path: "/api/sessions/end", method: "POST", body: EndSessionRequest(sessionId: sessionId))
-        return response.session
+        return (response.session, response.streakDays ?? 0)
+    }
+
+    func linkClass(studentId: String, classCode: String) async throws -> StudentProfile {
+        let response: LinkClassResponse = try await request(
+            path: "/api/students/\(studentId)/link-class",
+            method: "POST",
+            body: LinkClassRequest(classCode: classCode)
+        )
+        return response.student
     }
 
     private func request<Response: Decodable, Body: Encodable>(path: String, method: String, body: Body?) async throws -> Response {
@@ -118,5 +131,8 @@ struct StudentDraft: Codable {
 
 struct StartSessionRequest: Codable { let studentId: String }
 struct SubmitResponseRequest: Codable { let sessionId: String; let studentId: String; let questionId: String; let studentAnswer: String }
+struct NextQuestionRequest: Codable { let sessionId: String; let studentId: String }
 struct EndSessionRequest: Codable { let sessionId: String }
-struct EndSessionResponse: Codable { let session: TutorSession }
+struct EndSessionResponse: Codable { let session: TutorSession; let streakDays: Int? }
+struct LinkClassRequest: Codable { let classCode: String }
+struct LinkClassResponse: Codable { let student: StudentProfile; let teacherName: String? }

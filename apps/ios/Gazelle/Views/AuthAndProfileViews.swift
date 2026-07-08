@@ -96,6 +96,7 @@ struct StudentProfileView: View {
     @State private var pace = "steady"
     @State private var strengths = ""
     @State private var struggles = ""
+    @State private var classCode = ""
 
     var body: some View {
         NavigationStack {
@@ -118,9 +119,17 @@ struct StudentProfileView: View {
                     TextField("Strength subjects, comma-separated", text: $strengths)
                     TextField("Practice subjects, comma-separated", text: $struggles)
                 }
+                Section("Class") {
+                    TextField("Class code from the teacher (optional)", text: $classCode)
+                        .textInputAutocapitalization(.characters)
+                        .autocorrectionDisabled()
+                    Text("Linking to a class lets the tutor practice the teacher's current lesson.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
                 Section {
                     Button("Create student profile") {
-                        Task { await model.createStudent(draft: draft) }
+                        Task { await model.createStudent(draft: draft, classCode: classCode) }
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }

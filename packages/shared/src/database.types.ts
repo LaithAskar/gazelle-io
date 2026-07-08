@@ -477,6 +477,8 @@ export type Database = {
       }
       teacher_profiles: {
         Row: {
+          // class_code added by 005_class_codes.sql — regenerate types after applying it.
+          class_code: string | null
           created_at: string | null
           id: string
           name: string
@@ -485,6 +487,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          class_code?: string | null
           created_at?: string | null
           id?: string
           name: string
@@ -493,6 +496,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          class_code?: string | null
           created_at?: string | null
           id?: string
           name?: string

@@ -17,8 +17,13 @@ final class AppViewModel: ObservableObject {
     @Published var sessions: [TutorSession] = []
     @Published var activeSession: TutorSessionStart?
     @Published var lastTutorResult: TutorResponseResult?
+    @Published var celebration: SessionCelebration?
     @Published var isBusy = false
     @Published var errorMessage: String?
+
+    /// Correct answers in the current session, for the celebration screen.
+    private var sessionCorrectCount = 0
+    private var sessionAnsweredCount = 0
 
     private let tokenStore = TokenStore()
     private lazy var authClient = SupabaseAuthClient(tokenStore: tokenStore)
@@ -59,6 +64,7 @@ final class AppViewModel: ObservableObject {
         sessions = []
         activeSession = nil
         lastTutorResult = nil
+        celebration = nil
         authState = .signedOut
     }
 
@@ -83,12 +89,30 @@ final class AppViewModel: ObservableObject {
         }
     }
 
-    func createStudent(draft: StudentDraft) async {
-        await runBusy {
-            let student = try await apiClient.createStudent(draft)
+    func createStudent(draft: StudentDraft, classCode: String? = nil) async {
+        await runBusy { [self] in
+            var student = try await apiClient.createStudent(draft)
+            if let code = classCode?.trimmingCharacters(in: .whitespacesAndNewlines), code.isEmpty == false {
+                // Linking is best-effort: the profile exists even if the code is wrong.
+                if let linked = try? await apiClient.linkClass(studentId: student.id, classCode: code) {
+                    student = linked
+                } else {
+                    errorMessage = "Profile created, but that class code didn't match. You can link from Settings."
+                }
+            }
             students.append(student)
             selectedStudent = student
             authState = .ready
+        }
+    }
+
+    func linkStudentToClass(_ student: StudentProfile, classCode: String) async {
+        await runBusy { [self] in
+            let linked = try await apiClient.linkClass(studentId: student.id, classCode: classCode)
+            if let index = students.firstIndex(where: { $0.id == linked.id }) {
+                students[index] = linked
+            }
+            if selectedStudent?.id == linked.id { selectedStudent = linked }
         }
     }
 
@@ -112,30 +136,59 @@ final class AppViewModel: ObservableObject {
 
     func startTutorSession() async {
         guard let student = selectedStudent else { return }
-        await runBusy {
+        await runBusy { [self] in
             activeSession = try await apiClient.startSession(studentId: student.id)
             lastTutorResult = nil
+            sessionCorrectCount = 0
+            sessionAnsweredCount = 0
         }
     }
 
     func submitAnswer(_ answer: String) async {
         guard let student = selectedStudent, let session = activeSession else { return }
-        await runBusy {
-            lastTutorResult = try await apiClient.submitResponse(
+        await runBusy { [self] in
+            let result = try await apiClient.submitResponse(
                 sessionId: session.sessionId,
                 studentId: student.id,
                 questionId: session.questionId,
                 studentAnswer: answer
             )
+            lastTutorResult = result
+            sessionAnsweredCount += 1
+            if result.isCorrect { sessionCorrectCount += 1 }
+        }
+    }
+
+    func nextQuestion() async {
+        guard let student = selectedStudent, let session = activeSession else { return }
+        await runBusy { [self] in
+            let next = try await apiClient.nextQuestion(sessionId: session.sessionId, studentId: student.id)
+            activeSession = TutorSessionStart(
+                sessionId: session.sessionId,
+                questionId: next.questionId,
+                question: next.question
+            )
+            lastTutorResult = nil
         }
     }
 
     func endTutorSession() async {
         guard let session = activeSession else { return }
-        await runBusy {
-            _ = try await apiClient.endSession(sessionId: session.sessionId)
+        await runBusy { [self] in
+            let ended = try await apiClient.endSession(sessionId: session.sessionId)
             activeSession = nil
             lastTutorResult = nil
+
+            // Prefer the server's summary; fall back to locally tracked counts.
+            let answered = ended.session.summary?["questionsAnswered"]?.intValue ?? sessionAnsweredCount
+            let correct = ended.session.summary?["correctCount"]?.intValue ?? sessionCorrectCount
+            if answered > 0 {
+                celebration = SessionCelebration(
+                    questionsAnswered: answered,
+                    correctCount: correct,
+                    streakDays: ended.streakDays
+                )
+            }
             sessions = try await apiClient.loadSessions()
         }
     }

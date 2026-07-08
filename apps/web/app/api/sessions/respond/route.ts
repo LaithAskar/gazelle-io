@@ -1,5 +1,6 @@
 import { createRequestClient } from "@/lib/supabase/server";
 import { getCurrentParent } from "@/lib/current-parent";
+import { checkParentAgentRateLimit, rateLimitResponseInit } from "@/lib/rate-limit";
 import { createServiceRoleClient } from "@gazelle/db";
 import { submitResponse } from "@gazelle/agent-tutor";
 import { NextResponse } from "next/server";
@@ -56,6 +57,14 @@ export async function POST(req: Request) {
   const current = await getCurrentParent(req);
   if (!current?.parent) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rl = await checkParentAgentRateLimit(current.parent.id);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Whoa, that's a lot of practice! Take a short break and try again soon." },
+      rateLimitResponseInit(rl.retryAfterSeconds),
+    );
   }
 
   const body = await req.json().catch(() => null);

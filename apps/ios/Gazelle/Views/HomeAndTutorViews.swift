@@ -54,6 +54,12 @@ struct HomeView: View {
                 TutorSessionView()
                     .environmentObject(model)
             }
+            .sheet(item: Binding(
+                get: { model.celebration },
+                set: { if $0 == nil { model.celebration = nil } }
+            )) { celebration in
+                CelebrationView(celebration: celebration)
+            }
         }
     }
 }
@@ -61,7 +67,6 @@ struct HomeView: View {
 struct TutorSessionView: View {
     @EnvironmentObject private var model: AppViewModel
     @State private var answer = ""
-    @State private var showSummary = false
 
     var body: some View {
         NavigationStack {
@@ -113,10 +118,15 @@ struct TutorSessionView: View {
                         .primaryGazelleButton()
                         .disabled(answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     } else {
-                        Button("Finish session") {
-                            showSummary = true
+                        Button("Next question") {
+                            answer = ""
+                            Task { await model.nextQuestion() }
                         }
                         .primaryGazelleButton()
+                        Button("Finish session") {
+                            Task { await model.endTutorSession() }
+                        }
+                        .frame(maxWidth: .infinity)
                     }
                 } else {
                     ProgressView("Starting session…")
@@ -129,40 +139,50 @@ struct TutorSessionView: View {
                     Button("End") { Task { await model.endTutorSession() } }
                 }
             }
-            .sheet(isPresented: $showSummary) {
-                SessionSummaryView()
-                    .environmentObject(model)
-            }
         }
     }
 }
 
-struct SessionSummaryView: View {
-    @EnvironmentObject private var model: AppViewModel
+/// End-of-session reward screen: stars for accuracy, flame for the day streak.
+struct CelebrationView: View {
+    let celebration: SessionCelebration
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                Text("Session complete")
-                    .font(.largeTitle.bold())
-                if let result = model.lastTutorResult {
-                    Text(result.feedback)
-                        .font(.title3)
-                        .multilineTextAlignment(.center)
-                    Text(result.isCorrect ? "You’re building strong habits." : "Practice helps your brain grow.")
-                        .foregroundStyle(.secondary)
+        VStack(spacing: 24) {
+            Text("Session complete!")
+                .font(.largeTitle.bold())
+                .padding(.top, 40)
+
+            HStack(spacing: 12) {
+                ForEach(0..<3, id: \.self) { index in
+                    Image(systemName: index < celebration.stars ? "star.fill" : "star")
+                        .font(.system(size: 44))
+                        .foregroundStyle(index < celebration.stars ? Color.yellow : Color.secondary.opacity(0.4))
                 }
-                Button("Back home") {
-                    Task {
-                        await model.endTutorSession()
-                        dismiss()
-                    }
-                }
-                .primaryGazelleButton()
-                Spacer()
             }
-            .padding()
+
+            Text("\(celebration.correctCount) of \(celebration.questionsAnswered) correct")
+                .font(.title3)
+
+            if celebration.streakDays > 1 {
+                Label("\(celebration.streakDays)-day practice streak!", systemImage: "flame.fill")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
+            } else {
+                Text("Come back tomorrow to start a streak! 🔥")
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Practice helps your brain grow.")
+                .foregroundStyle(.secondary)
+
+            Button("Back home") { dismiss() }
+                .primaryGazelleButton()
+                .padding(.top, 8)
+
+            Spacer()
         }
+        .padding()
     }
 }

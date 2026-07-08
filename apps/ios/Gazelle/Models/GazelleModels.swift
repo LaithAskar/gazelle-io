@@ -64,6 +64,28 @@ struct TutorResponseResult: Codable {
     let nextDifficulty: String
 }
 
+struct TutorNextQuestion: Codable {
+    let questionId: String
+    let question: TutorQuestion
+}
+
+/// End-of-session celebration data (stars + streak) shown to the child.
+struct SessionCelebration: Identifiable, Equatable {
+    let id = UUID()
+    let questionsAnswered: Int
+    let correctCount: Int
+    let streakDays: Int
+
+    /// 0–3 stars from the share of correct answers.
+    var stars: Int {
+        guard questionsAnswered > 0 else { return 0 }
+        let ratio = Double(correctCount) / Double(questionsAnswered)
+        if ratio >= 0.8 { return 3 }
+        if ratio >= 0.5 { return 2 }
+        return 1
+    }
+}
+
 struct TutorSession: Codable, Identifiable, Equatable {
     let id: String
     let studentId: String
@@ -83,6 +105,18 @@ struct TutorSession: Codable, Identifiable, Equatable {
         case startedAt = "started_at"
         case endedAt = "ended_at"
         case createdAt = "created_at"
+    }
+}
+
+extension JSONValue {
+    var intValue: Int? {
+        if case .number(let value) = self { return Int(value) }
+        return nil
+    }
+
+    subscript(key: String) -> JSONValue? {
+        if case .object(let dict) = self { return dict[key] }
+        return nil
     }
 }
 

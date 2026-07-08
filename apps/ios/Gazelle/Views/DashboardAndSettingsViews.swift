@@ -52,6 +52,8 @@ struct SettingsView: View {
     @EnvironmentObject private var model: AppViewModel
     @State private var showAddStudent = false
     @State private var studentToDelete: StudentProfile?
+    @State private var studentToLink: StudentProfile?
+    @State private var classCodeInput = ""
 
     var body: some View {
         NavigationStack {
@@ -66,9 +68,17 @@ struct SettingsView: View {
                         VStack(alignment: .leading) {
                             Text(student.name).font(.headline)
                             Text(student.gradeLabel).foregroundStyle(.secondary)
+                            Text(student.teacherId == nil ? "Not linked to a class" : "Linked to a class ✓")
+                                .font(.caption)
+                                .foregroundStyle(student.teacherId == nil ? .secondary : Color.green)
                         }
                         .swipeActions {
                             Button("Delete", role: .destructive) { studentToDelete = student }
+                            Button("Class code") {
+                                classCodeInput = ""
+                                studentToLink = student
+                            }
+                            .tint(.blue)
                         }
                     }
                     Button("Add student") { showAddStudent = true }
@@ -82,6 +92,26 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $showAddStudent) { StudentProfileView().environmentObject(model) }
+            .alert(
+                "Link to a class",
+                isPresented: Binding(
+                    get: { studentToLink != nil },
+                    set: { if !$0 { studentToLink = nil } }
+                ),
+                presenting: studentToLink
+            ) { student in
+                TextField("Class code", text: $classCodeInput)
+                    .textInputAutocapitalization(.characters)
+                    .autocorrectionDisabled()
+                Button("Link") {
+                    let code = classCodeInput
+                    Task { await model.linkStudentToClass(student, classCode: code) }
+                    studentToLink = nil
+                }
+                Button("Cancel", role: .cancel) { studentToLink = nil }
+            } message: { student in
+                Text("Enter the class code from \(student.name)'s teacher.")
+            }
             .confirmationDialog(
                 "Delete student data?",
                 isPresented: Binding(

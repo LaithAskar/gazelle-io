@@ -51,10 +51,44 @@ export async function POST(req: Request) {
   }
 
   try {
-    const session = await endTutorSession(sessionId);
-    return NextResponse.json({ session });
+    const ended = await endTutorSession(sessionId);
+    const streakDays = await computeStreakDays(supabase, session.student_id);
+    return NextResponse.json({ session: ended, streakDays });
   } catch (error) {
     console.error("Failed to end tutor session", error);
     return NextResponse.json({ error: "Failed to end tutor session" }, { status: 500 });
   }
+}
+
+/**
+ * Consecutive practice days ending today (UTC), from completed sessions.
+ * Read through the parent's own client — RLS scopes it to their children.
+ */
+async function computeStreakDays(
+  supabase: ReturnType<typeof createRequestClient>,
+  studentId: string,
+): Promise<number> {
+  const { data } = await supabase
+    .from("sessions")
+    .select("ended_at")
+    .eq("student_id", studentId)
+    .eq("status", "completed")
+    .not("ended_at", "is", null)
+    .order("ended_at", { ascending: false })
+    .limit(120);
+
+  const days = new Set(
+    (data ?? [])
+      .map((s) => s.ended_at)
+      .filter((v): v is string => typeof v === "string")
+      .map((v) => v.slice(0, 10)), // YYYY-MM-DD (UTC)
+  );
+
+  let streak = 0;
+  const cursor = new Date();
+  while (days.has(cursor.toISOString().slice(0, 10))) {
+    streak += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+  return streak;
 }
