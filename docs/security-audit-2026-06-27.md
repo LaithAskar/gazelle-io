@@ -180,16 +180,18 @@ Implemented in code on branch `claude/gazelle-security-audit-i39dcf`
   (Authentication → Providers → Email → "Confirm email"). Until this is flipped,
   signup is still auto-confirmed and the email-confirmation code path above stays
   dormant. (Note: the live project currently has auto-confirm ON — see CLAUDE.md.)
-- **#2 role self-assignment — FLAGGED, NOT changed.** The `users_insert_own` RLS
-  policy lets a user insert their own row with any `role`. Tightening this means
-  editing the live RLS policy (`002_rls_policies.sql`), which the project's
-  Locked Decisions forbid touching without architect sign-off. Recommended change
-  for your review (apply manually if approved):
+- **#2 role self-assignment — severity DOWNGRADED on re-review (2026-07-08).**
+  The schema was already stricter than this audit credited: `users.role` has a
+  table-level `CHECK (role IN ('parent','teacher'))` in `001_initial_schema.sql`,
+  so the worst case (self-assigning a privileged/unknown role) was blocked at
+  the database level all along. Residual risk is only that a stranger can
+  register as a "teacher" — who, under RLS, sees nothing unless a parent
+  deliberately links a child via that teacher's class code. The RLS policy is
+  still tightened to mirror the constraint (defense in depth) — updated in
+  `002_rls_policies.sql`; apply to live with:
 
   ```sql
-  -- Restrict self-insert to the non-privileged roles a client may self-assign.
-  DROP POLICY "users_insert_own" ON users;
+  DROP POLICY IF EXISTS "users_insert_own" ON users;
   CREATE POLICY "users_insert_own" ON users FOR INSERT
     WITH CHECK (id = auth.uid() AND role IN ('teacher', 'parent'));
-  -- (Or move role assignment server-side entirely and drop client INSERT.)
   ```

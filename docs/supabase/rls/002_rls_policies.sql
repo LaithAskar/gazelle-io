@@ -46,7 +46,10 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 -- USERS — own record only
 -- ============================================================
 CREATE POLICY "users_select_own" ON users FOR SELECT USING (id = auth.uid());
-CREATE POLICY "users_insert_own" ON users FOR INSERT WITH CHECK (id = auth.uid());
+-- Role list duplicates the table CHECK constraint (defense in depth): a user
+-- may only ever self-assign a non-privileged role. Applied to live 2026-07-08.
+CREATE POLICY "users_insert_own" ON users FOR INSERT
+  WITH CHECK (id = auth.uid() AND role IN ('teacher', 'parent'));
 CREATE POLICY "users_update_own" ON users FOR UPDATE USING (id = auth.uid());
 
 -- ============================================================

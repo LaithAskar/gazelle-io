@@ -41,6 +41,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ parent: data });
   }
 
+  // parent_profiles.user_id has an FK to public.users — bootstrap that row
+  // first (mirrors the teacher web signup). RLS allows inserting your own row;
+  // error 23505 (already exists) is fine.
+  const { error: userError } = await supabase
+    .from("users")
+    .insert({ id: current.user.id, email: current.user.email ?? "", role: "parent" });
+  if (userError && userError.code !== "23505") {
+    console.error("[parent/profile] users bootstrap failed:", userError);
+    return NextResponse.json({ error: "Failed to create parent profile" }, { status: 500 });
+  }
+
   const { data, error } = await supabase
     .from("parent_profiles")
     .insert({ user_id: current.user.id, name })
