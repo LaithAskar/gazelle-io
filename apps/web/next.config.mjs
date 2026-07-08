@@ -7,6 +7,7 @@ const nextConfig = {
     "@gazelle/db",
     "@gazelle/agent-planner",
     "@gazelle/agent-curriculum",
+    "@gazelle/agent-tutor",
     "@gazelle/agent-core",
     "@gazelle/rag",
   ],

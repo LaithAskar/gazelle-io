@@ -104,7 +104,23 @@ const feedbackSchema = z.object({
 
 export interface SessionStart {
   sessionId: string;
+  /** agent_logs id for the approved generated question; clients send this back when answering. */
+  questionId: string;
   question: GeneratedQuestion;
+}
+
+async function markInitialSessionFailed(sessionId: string, reason: string): Promise<void> {
+  const db = serviceClient();
+  const summary: Session["summary"] = {
+    status: "initial_question_rejected",
+    note: "Session ended before any student-facing question was approved.",
+    reason,
+  };
+  const { error } = await db
+    .from("sessions")
+    .update({ status: "flagged", ended_at: new Date().toISOString(), summary })
+    .eq("id", sessionId);
+  if (error) throw new Error(`Failed to flag rejected initial session: ${error.message}`);
 }
 
 /** Start a session and produce the first question. */
@@ -124,13 +140,34 @@ export async function startTutorSession(args: { studentId: string }): Promise<Se
     .single();
   if (error || !session) throw new Error(`Failed to start session: ${error?.message}`);
 
-  const question = await generateQuestion({
-    studentId: args.studentId,
-    grade: student.grade,
-    plan,
-    difficulty: student.pace === "fast" ? "medium" : "easy",
-  });
-  return { sessionId: session.id, question };
+  try {
+    const question = await generateQuestion({
+      studentId: args.studentId,
+      grade: student.grade,
+      plan,
+      difficulty: student.pace === "fast" ? "medium" : "easy",
+    });
+    const verdict = await reviewAndLog(db, {
+      agent: "tutor",
+      input: { studentId: args.studentId, lessonPlanId: plan?.id ?? null, difficulty: question.difficulty },
+      output: question,
+      strict: true,
+      studentId: args.studentId,
+      sessionId: session.id,
+    });
+    if (!verdict.approved) {
+      throw new ContentRejectedError(verdict.filter.flags);
+    }
+
+    return { sessionId: session.id, questionId: verdict.logId, question };
+  } catch (generationOrReviewError) {
+    try {
+      await markInitialSessionFailed(session.id, "Initial tutor question generation or review failed.");
+    } catch (cleanupError) {
+      console.error("Failed to flag rejected initial tutor session", cleanupError);
+    }
+    throw generationOrReviewError;
+  }
 }
 
 export async function generateQuestion(args: {

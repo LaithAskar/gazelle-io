@@ -13,6 +13,7 @@
   "dependencies": {
     "@gazelle/agent-curriculum": "workspace:*",
     "@gazelle/agent-planner": "workspace:*",
+    "@gazelle/agent-tutor": "workspace:*",
     "@gazelle/db": "workspace:*",
     "@gazelle/shared": "workspace:*",
     "@supabase/ssr": "^0.5.2",

@@ -26,6 +26,9 @@ importers:
       '@gazelle/agent-planner':
         specifier: workspace:*
         version: link:../../packages/agents/planner
+      '@gazelle/agent-tutor':
+        specifier: workspace:*
+        version: link:../../packages/agents/tutor
       '@gazelle/db':
         specifier: workspace:*
         version: link:../../packages/db
