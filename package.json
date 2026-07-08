@@ -11,7 +11,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "type-check": "turbo type-check"
+    "type-check": "turbo type-check",
+    "verify:phase5": "node scripts/verify-phase5-integration.mjs"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

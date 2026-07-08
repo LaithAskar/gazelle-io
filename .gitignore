@@ -39,6 +39,7 @@ DerivedData/
 .build/
 Pods/
 *.xcconfig.local
+Config.local.xcconfig
 
 # ---- Supabase CLI local artifacts ----
 .branches/

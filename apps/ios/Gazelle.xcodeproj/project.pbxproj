@@ -1,0 +1,106 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		71F14C21C556D9DD6955CF6A /* GazelleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A29907B03D746C9C198E9426 /* GazelleApp.swift */; };
+		54C16B5AC219FC4ED644625F /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFB1A527AEB8844E1CCAE8AF /* AppConfig.swift */; };
+		61D8D213638ADD435FAB5CF6 /* GazelleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECA00D4F25D3FDCCEBD5342 /* GazelleModels.swift */; };
+		D64DAFC84283374763ED9EAE /* TokenStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A648A6D3C3E39C10AD560FA3 /* TokenStore.swift */; };
+		DAA43336BF88DB1AFBD4654C /* SupabaseAuthClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61E981EDE5E5DA197027D1C /* SupabaseAuthClient.swift */; };
+		13FAA550CE99F771392A8204 /* GazelleAPIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B66CB73899ECB0D648980465 /* GazelleAPIClient.swift */; };
+		E2CC94B7CE840404CD733A83 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE8C678436080789E78C5194 /* AppViewModel.swift */; };
+		6215E03EBCE435235DA87F4B /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B63159190DA5D51C0A66A54 /* RootView.swift */; };
+		4EE45C7F8A56D94B7A354AC1 /* AuthAndProfileViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5962F64EA541A87E0E587345 /* AuthAndProfileViews.swift */; };
+		6FD7C4F344C3E1D10345E2A4 /* HomeAndTutorViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DB755E2BC6CFFBD749EFE0 /* HomeAndTutorViews.swift */; };
+		AF75F444D810A31A2A82DFFA /* DashboardAndSettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 476F735AEA782F7BB6058ABA /* DashboardAndSettingsViews.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		184064D94F1B0A26708FBFFF /* Gazelle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gazelle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F677869580064E86300F401 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		A0918ED584CF7343D84C0D46 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Support/Info.plist; sourceTree = "<group>"; };
+		33726535180252CEACAD2AA0 /* Gazelle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Support/Gazelle.entitlements; sourceTree = "<group>"; };
+		A29907B03D746C9C198E9426 /* GazelleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GazelleApp.swift; sourceTree = "<group>"; };
+		CFB1A527AEB8844E1CCAE8AF /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config/AppConfig.swift; sourceTree = "<group>"; };
+		4ECA00D4F25D3FDCCEBD5342 /* GazelleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/GazelleModels.swift; sourceTree = "<group>"; };
+		A648A6D3C3E39C10AD560FA3 /* TokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenStore.swift; sourceTree = "<group>"; };
+		F61E981EDE5E5DA197027D1C /* SupabaseAuthClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SupabaseAuthClient.swift; sourceTree = "<group>"; };
+		B66CB73899ECB0D648980465 /* GazelleAPIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GazelleAPIClient.swift; sourceTree = "<group>"; };
+		BE8C678436080789E78C5194 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels/AppViewModel.swift; sourceTree = "<group>"; };
+		8B63159190DA5D51C0A66A54 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/RootView.swift; sourceTree = "<group>"; };
+		5962F64EA541A87E0E587345 /* AuthAndProfileViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/AuthAndProfileViews.swift; sourceTree = "<group>"; };
+		28DB755E2BC6CFFBD749EFE0 /* HomeAndTutorViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/HomeAndTutorViews.swift; sourceTree = "<group>"; };
+		476F735AEA782F7BB6058ABA /* DashboardAndSettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views/DashboardAndSettingsViews.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FC6D3C60ED9A2047D6F73996 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		11C65A69D7B6E6E1EA9ED8FB = {isa = PBXGroup; children = ( 00952FECF87630E2DB5400A4 /* Gazelle */, 3F677869580064E86300F401 /* Config.xcconfig */, 2FE822F57B2C383C07D8161F /* Products */, ); sourceTree = "<group>"; };
+		00952FECF87630E2DB5400A4 /* Gazelle */ = {isa = PBXGroup; children = (
+				A29907B03D746C9C198E9426 /* GazelleApp.swift */,
+				CFB1A527AEB8844E1CCAE8AF /* AppConfig.swift */,
+				4ECA00D4F25D3FDCCEBD5342 /* GazelleModels.swift */,
+				A648A6D3C3E39C10AD560FA3 /* TokenStore.swift */,
+				F61E981EDE5E5DA197027D1C /* SupabaseAuthClient.swift */,
+				B66CB73899ECB0D648980465 /* GazelleAPIClient.swift */,
+				BE8C678436080789E78C5194 /* AppViewModel.swift */,
+				8B63159190DA5D51C0A66A54 /* RootView.swift */,
+				5962F64EA541A87E0E587345 /* AuthAndProfileViews.swift */,
+				28DB755E2BC6CFFBD749EFE0 /* HomeAndTutorViews.swift */,
+				476F735AEA782F7BB6058ABA /* DashboardAndSettingsViews.swift */,
+				A0918ED584CF7343D84C0D46 /* Info.plist */,
+				33726535180252CEACAD2AA0 /* Gazelle.entitlements */,
+			); path = Gazelle; sourceTree = "<group>"; };
+		2FE822F57B2C383C07D8161F /* Products */ = {isa = PBXGroup; children = ( 184064D94F1B0A26708FBFFF /* Gazelle.app */, ); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3BEAEBA32AC36D94AA585C5F /* Gazelle */ = {isa = PBXNativeTarget; buildConfigurationList = 1720BB8E522AD1034ABE9181 /* Build configuration list for PBXNativeTarget "Gazelle" */; buildPhases = ( 9E1A23DD79C6A003CAA1CFCC /* Sources */, FC6D3C60ED9A2047D6F73996 /* Frameworks */, C9AFD5CD25DF9A98DD6631AD /* Resources */, ); buildRules = ( ); dependencies = ( ); name = Gazelle; productName = Gazelle; productReference = 184064D94F1B0A26708FBFFF /* Gazelle.app */; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5BCACB725134B475D5C5C906 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = { 3BEAEBA32AC36D94AA585C5F = {CreatedOnToolsVersion = 16.0; }; }; }; buildConfigurationList = 2A4023FB1158770649777F3F /* Build configuration list for PBXProject "Gazelle" */; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = ( en, Base, ); mainGroup = 11C65A69D7B6E6E1EA9ED8FB; productRefGroup = 2FE822F57B2C383C07D8161F /* Products */; projectDirPath = ""; projectRoot = ""; targets = ( 3BEAEBA32AC36D94AA585C5F /* Gazelle */, ); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C9AFD5CD25DF9A98DD6631AD /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ( ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9E1A23DD79C6A003CAA1CFCC /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+				71F14C21C556D9DD6955CF6A /* GazelleApp.swift in Sources */,
+				54C16B5AC219FC4ED644625F /* AppConfig.swift in Sources */,
+				61D8D213638ADD435FAB5CF6 /* GazelleModels.swift in Sources */,
+				D64DAFC84283374763ED9EAE /* TokenStore.swift in Sources */,
+				DAA43336BF88DB1AFBD4654C /* SupabaseAuthClient.swift in Sources */,
+				13FAA550CE99F771392A8204 /* GazelleAPIClient.swift in Sources */,
+				E2CC94B7CE840404CD733A83 /* AppViewModel.swift in Sources */,
+				6215E03EBCE435235DA87F4B /* RootView.swift in Sources */,
+				4EE45C7F8A56D94B7A354AC1 /* AuthAndProfileViews.swift in Sources */,
+				6FD7C4F344C3E1D10345E2A4 /* HomeAndTutorViews.swift in Sources */,
+				AF75F444D810A31A2A82DFFA /* DashboardAndSettingsViews.swift in Sources */,
+			); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		72AE6827AE83B798B1AD122A /* Debug */ = {isa = XCBuildConfiguration; baseConfigurationReference = 3F677869580064E86300F401 /* Config.xcconfig */; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ANALYZER_NONNULL = YES; CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE; CLANG_CXX_LANGUAGE_STANDARD = "gnu++20"; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; CLANG_ENABLE_OBJC_WEAK = YES; CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES; CLANG_WARN_BOOL_CONVERSION = YES; CLANG_WARN_COMMA = YES; CLANG_WARN_CONSTANT_CONVERSION = YES; CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES; CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR; CLANG_WARN_DOCUMENTATION_COMMENTS = YES; CLANG_WARN_EMPTY_BODY = YES; CLANG_WARN_ENUM_CONVERSION = YES; CLANG_WARN_INFINITE_RECURSION = YES; CLANG_WARN_INT_CONVERSION = YES; CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES; CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES; CLANG_WARN_OBJC_LITERAL_CONVERSION = YES; CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR; CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES; CLANG_WARN_RANGE_LOOP_ANALYSIS = YES; CLANG_WARN_STRICT_PROTOTYPES = YES; CLANG_WARN_SUSPICIOUS_MOVE = YES; CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE; CLANG_WARN_UNREACHABLE_CODE = YES; CLANG_WARN__DUPLICATE_METHOD_MATCH = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_STRICT_OBJC_MSGSEND = YES; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_DYNAMIC_NO_PIC = NO; GCC_NO_COMMON_BLOCKS = YES; GCC_OPTIMIZATION_LEVEL = 0; GCC_PREPROCESSOR_DEFINITIONS = ( "DEBUG=1", "$(inherited)", ); GCC_WARN_64_TO_32_BIT_CONVERSION = YES; GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR; GCC_WARN_UNDECLARED_SELECTOR = YES; GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE; GCC_WARN_UNUSED_FUNCTION = YES; GCC_WARN_UNUSED_VARIABLE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE; MTL_FAST_MATH = YES; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OP... [truncated]
+		798029EE7B5319806749D980 /* Release */ = {isa = XCBuildConfiguration; baseConfigurationReference = 3F677869580064E86300F401 /* Config.xcconfig */; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; ENABLE_STRICT_OBJC_MSGSEND = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_NO_COMMON_BLOCKS = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MTL_ENABLE_DEBUG_INFO = NO; MTL_FAST_MATH = YES; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; VALIDATE_PRODUCT = YES; }; name = Release; };
+		F04F0FEA4B4549FF2EBB4C60 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = Gazelle/Support/Gazelle.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_ASSET_PATHS = ""; DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)"; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Gazelle/Support/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(GAZELLE_PRODUCT_BUNDLE_IDENTIFIER)"; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Debug; };
+		9E59DE5CE59C7D6B819E326A /* Release */ = {isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = Gazelle/Support/Gazelle.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = "$(DEVELOPMENT_TEAM)"; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Gazelle/Support/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = "$(GAZELLE_PRODUCT_BUNDLE_IDENTIFIER)"; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = "1,2"; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2A4023FB1158770649777F3F /* Build configuration list for PBXProject "Gazelle" */ = {isa = XCConfigurationList; buildConfigurations = ( 72AE6827AE83B798B1AD122A /* Debug */, 798029EE7B5319806749D980 /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		1720BB8E522AD1034ABE9181 /* Build configuration list for PBXNativeTarget "Gazelle" */ = {isa = XCConfigurationList; buildConfigurations = ( F04F0FEA4B4549FF2EBB4C60 /* Debug */, 9E59DE5CE59C7D6B819E326A /* Release */, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = 5BCACB725134B475D5C5C906 /* Project object */;
+}

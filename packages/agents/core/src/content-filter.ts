@@ -27,6 +27,30 @@ export interface FilterResult {
   flags: string[];
 }
 
+export interface RedactResult {
+  redacted: string;
+  flags: string[];
+}
+
+/**
+ * Redact PII from UNTRUSTED INPUT before it is stored or shown.
+ * The filter above gates agent *output*; this protects against persisting raw
+ * personal data a child (or any user) might type into an answer/free-text box —
+ * the COPPA-sensitive direction. Replaces each match with `[redacted:<kind>]`.
+ */
+export function redactPII(text: string): RedactResult {
+  let redacted = text;
+  const flags: string[] = [];
+  for (const [label, re] of PII_PATTERNS) {
+    const global = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+    if (global.test(redacted)) {
+      flags.push(`pii:${label}`);
+      redacted = redacted.replace(global, `[redacted:${label}]`);
+    }
+  }
+  return { redacted, flags };
+}
+
 export function filterContent(text: string, opts: { strict?: boolean } = {}): FilterResult {
   const flags: string[] = [];
 

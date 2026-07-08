@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { generateQuestionBank } from "@gazelle/agent-planner";
 import { getCurrentTeacher } from "@/lib/current-teacher";
 import { createClient } from "@/lib/supabase/server";
+import { checkAgentRateLimit, rateLimitResponseInit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,14 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const current = await getCurrentTeacher();
   if (!current?.teacher) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const rl = await checkAgentRateLimit(current.teacher.id);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      rateLimitResponseInit(rl.retryAfterSeconds),
+    );
   }
 
   const supabase = createClient();

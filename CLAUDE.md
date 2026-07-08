@@ -107,7 +107,14 @@ Copy `.env.example` to `.env.local` and fill in real values locally. Required ke
 - **Phase 4 (Next.js teacher dashboard): ✅ done & verified.** `apps/web` — Next.js 14 App Router, Tailwind, Supabase SSR auth (email/password, autoconfirm enabled on the live project), middleware route protection. Pages: /auth, /dashboard (recent lessons + weekly insight), /lessons, /lessons/new (Planner generate), /lessons/[id] (view + approve → question bank), /students. Server-only API routes (`/api/lessons/generate`, `/api/lessons/[id]/approve`, `/api/insights`) invoke the agents with the service role. Verified: production build clean, server boots, routes + auth redirect work, signup self-bootstrap works under RLS.
   - Improvements made this phase: enabled Supabase `mailer_autoconfirm` (was off, contradicting setup doc); added Voyage 429 retry/backoff; removed the Planner's redundant autonomous RAG tool (deterministic prefetch already grounds it) to halve Voyage calls per generation.
   - To run locally: env must be loaded for Next (root `.env.local`), and in THIS shell the empty `ANTHROPIC_API_KEY` must be overridden. Voyage free tier 3 RPM still applies to in-browser generation until a payment method is added.
-- **Phase 5 (iOS app): ⏭️ next (stretch).**
+- **Phase 5 (iOS app): ✅ done (built on `feat/gazelle-phase-5-ios`).** SwiftUI app (parent auth, student profiles, live tutor sessions), parent-scoped API routes, public landing page.
+- **Post-Phase-5 hardening & product round (2026-07-08, branch `claude/gazelle-security-audit-i39dcf`):**
+  - Security branch **merged** with Phase 5 (rate limiting, prompt-injection delimiters, PII redaction, security headers, email-confirm signup flow all now coexist with the iOS work). Parent-keyed rate limits added to `/api/sessions/start|respond|next` (12/min, 300/day per family).
+  - iOS auth tokens moved from UserDefaults to the **Keychain** (with one-time migration).
+  - **Class codes**: teachers get a 6-char code (auto-generated, shown on /students); parents enter it in iOS to link a student → activates lesson-grounded tutoring. ⚠️ Requires `docs/supabase/migrations/005_class_codes.sql` — **NOT yet applied to the live DB**; architect must run it in the Supabase SQL editor. `database.types.ts` was hand-updated to match; regenerate after applying.
+  - **Multi-question sessions + rewards**: new `/api/sessions/next` (difficulty ladder from last answer), end-of-session stars + day-streak celebration in iOS (`streakDays` computed in `/api/sessions/end`, UTC-based).
+  - **Question-bank-first Tutor**: sessions serve the Planner's pre-approved bank questions when available (strict-filtered + agent_logs-logged like all output), falling back to live generation — cuts Claude calls and latency per question.
+  - Verified: all packages type-check, web production build clean, `verify-phase5-integration.mjs` passes. Swift changes are **not yet compiled** (no Xcode in the cloud env) — validate per `docs/PHASE5_IOS_VALIDATION.md`.
 Update this section as phases complete.
 ---
 ## First Action

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { ClassCodeCard } from "@/components/class-code-card";
 import { getCurrentTeacher } from "@/lib/current-teacher";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,6 +23,8 @@ export default async function StudentsPage() {
       <p className="mt-1 text-sm text-slate-500">
         Students are created by their parents in the Gazelle iOS app and linked to your class.
       </p>
+
+      <ClassCodeCard initialCode={current.teacher?.class_code ?? null} />
 
       <div className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-sm">
