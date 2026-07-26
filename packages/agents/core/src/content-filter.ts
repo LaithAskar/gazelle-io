@@ -14,13 +14,27 @@ const PII_PATTERNS: Array<[string, RegExp]> = [
 ];
 
 // Student-facing banned categories: adult, violence, political, religious.
+// Patterns use word boundaries so harmless substrings ("skillful", "workshop")
+// do not trigger a zero-tolerance category.
 const BANNED_PATTERNS: Array<[string, RegExp]> = [
   ["adult", /\b(sex|sexual|porn|nude|naked)\b/i],
-  ["violence", /\b(kill|murder|suicide|gun|shoot|weapon)\b/i],
+  [
+    "violence",
+    /\b(kill(?:s|ed|ing|er(?:s)?)?|murder(?:s|ed|ing|er(?:s)?)?|suicid(?:e|es|al)|guns?|firearms?|shoot(?:s|ing|er(?:s)?)?|shots?|stabs?|stabb(?:ed|ing)|weapons?)\b/i,
+  ],
   ["substances", /\b(drugs|cocaine|heroin|alcohol|vape)\b/i],
   ["political", /\b(democrat|republican|abortion|election|congress)\b/i],
   ["religious", /\b(jesus|christ|allah|bible|quran|church|mosque|prayer)\b/i],
 ];
+
+/**
+ * Mask narrowly-defined benign uses of otherwise banned words before strict
+ * topic matching. Keep this allowlist contextual and small: only the astronomy
+ * phrase is exempt, while any other violent term in the same text still flags.
+ */
+function strictTopicText(text: string): string {
+  return text.replace(/\bshooting[ -]stars?\b/gi, "astronomical object");
+}
 
 export interface FilterResult {
   ok: boolean;
@@ -59,8 +73,9 @@ export function filterContent(text: string, opts: { strict?: boolean } = {}): Fi
   }
 
   if (opts.strict) {
+    const topicText = strictTopicText(text);
     for (const [label, re] of BANNED_PATTERNS) {
-      if (re.test(text)) flags.push(`banned:${label}`);
+      if (re.test(topicText)) flags.push(`banned:${label}`);
     }
   }
 

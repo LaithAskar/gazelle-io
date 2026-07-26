@@ -1,5 +1,6 @@
 import { createRequestClient } from "@/lib/supabase/server";
 import { getCurrentParent } from "@/lib/current-parent";
+import { isOwnedStudent } from "@/lib/session-ownership";
 import { endTutorSession } from "@gazelle/agent-tutor";
 import { NextResponse } from "next/server";
 
@@ -46,7 +47,7 @@ export async function POST(req: Request) {
 
   if (studentError) return NextResponse.json({ error: "Failed to verify student ownership" }, { status: 500 });
   if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
-  if (student.parent_id !== current.parent.id) {
+  if (!isOwnedStudent(current.parent.id, student)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

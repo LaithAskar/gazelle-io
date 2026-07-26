@@ -1,23 +1,41 @@
-// Per-teacher rate limiting for the expensive AI routes (each triggers Claude
-// and/or Voyage calls). Without this, one authenticated user could spam the
-// endpoints and run up the API bill — the most realistic abuse vector for the app.
+// Per-user rate limiting for expensive AI routes. Counts come from agent_logs,
+// which every generation already writes, so this needs no new dependency/table.
 //
-// Implementation note: we count rows the agents already write to `agent_logs`
-// (every generation logs there) within a time window, keyed by teacher_id. This
-// needs no new dependency and no new table. It uses the service-role client
-// because `agent_logs` has no client RLS policy. A managed limiter (e.g. Upstash)
-// is the post-MVP upgrade if we need cross-instance precision.
+// Atomicity blocker: these read-only counts cannot reserve capacity atomically.
+// Concurrent requests can all pass before their agent_logs rows exist. Closing
+// that race requires a transactional database RPC/counter or an external
+// distributed limiter; neither is available under the current schema/scope.
 
 import { createServiceRoleClient } from "@gazelle/db";
 
-const WINDOW_MS = 60_000; // 1 minute
+const WINDOW_MS = 60_000;
 const MAX_PER_MINUTE = 8;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MAX_PER_DAY = 100;
+const PARENT_MAX_PER_MINUTE = 12;
+const PARENT_MAX_PER_DAY = 300;
+const FAILURE_RETRY_SECONDS = 60;
 
 export interface RateLimitResult {
   ok: boolean;
   retryAfterSeconds: number;
+}
+
+export interface CountResult {
+  count: number | null;
+  error: unknown;
+}
+
+export interface StudentIdResult {
+  data: Array<{ id: string }> | null;
+  error: unknown;
+}
+
+/** Minimal data boundary used by deterministic tests; production adapts Supabase to it. */
+export interface RateLimitSource {
+  findStudentIds(parentId: string): Promise<StudentIdResult>;
+  countTeacherLogs(teacherId: string, since: string): Promise<CountResult>;
+  countStudentLogs(studentIds: string[], since: string): Promise<CountResult>;
 }
 
 let cached: ReturnType<typeof createServiceRoleClient> | null = null;
@@ -26,77 +44,116 @@ function db() {
   return cached;
 }
 
-/** Returns ok:false (with a Retry-After hint) once a teacher exceeds the cap. */
-export async function checkAgentRateLimit(teacherId: string): Promise<RateLimitResult> {
-  const now = Date.now();
+function sourceFor(client: ReturnType<typeof createServiceRoleClient>): RateLimitSource {
+  return {
+    async findStudentIds(parentId) {
+      const { data, error } = await client.from("student_profiles").select("id").eq("parent_id", parentId);
+      return { data, error };
+    },
+    async countTeacherLogs(teacherId, since) {
+      const { count, error } = await client
+        .from("agent_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("teacher_id", teacherId)
+        .gte("created_at", since);
+      return { count, error };
+    },
+    async countStudentLogs(studentIds, since) {
+      const { count, error } = await client
+        .from("agent_logs")
+        .select("id", { count: "exact", head: true })
+        .in("student_id", studentIds)
+        .gte("created_at", since);
+      return { count, error };
+    },
+  };
+}
+
+function deny(retryAfterSeconds: number): RateLimitResult {
+  return { ok: false, retryAfterSeconds };
+}
+
+function isUsableCount(result: CountResult): result is CountResult & { count: number; error: null } {
+  return result.error == null && Number.isSafeInteger(result.count) && result.count !== null && result.count >= 0;
+}
+
+export async function checkTeacherAgentRateLimitWithSource(
+  source: RateLimitSource,
+  teacherId: string,
+  now = Date.now(),
+): Promise<RateLimitResult> {
+  if (!teacherId.trim()) return deny(FAILURE_RETRY_SECONDS);
+
   const minuteStart = new Date(now - WINDOW_MS).toISOString();
   const dayStart = new Date(now - DAY_MS).toISOString();
-  const client = db();
 
-  const [minute, day] = await Promise.all([
-    client
-      .from("agent_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("teacher_id", teacherId)
-      .gte("created_at", minuteStart),
-    client
-      .from("agent_logs")
-      .select("id", { count: "exact", head: true })
-      .eq("teacher_id", teacherId)
-      .gte("created_at", dayStart),
-  ]);
+  let minute: CountResult;
+  let day: CountResult;
+  try {
+    [minute, day] = await Promise.all([
+      source.countTeacherLogs(teacherId, minuteStart),
+      source.countTeacherLogs(teacherId, dayStart),
+    ]);
+  } catch {
+    return deny(FAILURE_RETRY_SECONDS);
+  }
 
-  if ((minute.count ?? 0) >= MAX_PER_MINUTE) {
-    return { ok: false, retryAfterSeconds: Math.ceil(WINDOW_MS / 1000) };
-  }
-  if ((day.count ?? 0) >= MAX_PER_DAY) {
-    return { ok: false, retryAfterSeconds: Math.ceil(DAY_MS / 1000) };
-  }
+  // A query error or missing exact count is indeterminate, so deny rather than
+  // silently treating it as zero and allowing an expensive call.
+  if (!isUsableCount(minute) || !isUsableCount(day)) return deny(FAILURE_RETRY_SECONDS);
+  if (minute.count >= MAX_PER_MINUTE) return deny(Math.ceil(WINDOW_MS / 1000));
+  if (day.count >= MAX_PER_DAY) return deny(Math.ceil(DAY_MS / 1000));
   return { ok: true, retryAfterSeconds: 0 };
 }
 
-// Parent limits are higher than teacher limits: a session answer is one Claude
-// call and kids answer every ~15-30s, possibly with siblings sharing an account.
-const PARENT_MAX_PER_MINUTE = 12;
-const PARENT_MAX_PER_DAY = 300;
+export async function checkAgentRateLimit(teacherId: string): Promise<RateLimitResult> {
+  return checkTeacherAgentRateLimitWithSource(sourceFor(db()), teacherId);
+}
 
-/**
- * Rate limit for the parent-facing tutor routes. agent_logs has no parent_id
- * column, so we count logs across the parent's students (student_id IN ...).
- */
-export async function checkParentAgentRateLimit(parentId: string): Promise<RateLimitResult> {
-  const client = db();
-  const { data: students } = await client
-    .from("student_profiles")
-    .select("id")
-    .eq("parent_id", parentId);
-  const studentIds = (students ?? []).map((s) => s.id);
-  if (!studentIds.length) return { ok: true, retryAfterSeconds: 0 };
+export async function checkParentAgentRateLimitWithSource(
+  source: RateLimitSource,
+  parentId: string,
+  now = Date.now(),
+): Promise<RateLimitResult> {
+  if (!parentId.trim()) return deny(FAILURE_RETRY_SECONDS);
 
-  const now = Date.now();
+  let students: StudentIdResult;
+  try {
+    students = await source.findStudentIds(parentId);
+  } catch {
+    return deny(FAILURE_RETRY_SECONDS);
+  }
+
+  if (students.error != null || students.data === null) return deny(FAILURE_RETRY_SECONDS);
+  if (students.data.some((student) => typeof student.id !== "string" || !student.id.trim())) {
+    return deny(FAILURE_RETRY_SECONDS);
+  }
+
+  const studentIds = students.data.map((student) => student.id);
+  if (studentIds.length === 0) return { ok: true, retryAfterSeconds: 0 };
+
   const minuteStart = new Date(now - WINDOW_MS).toISOString();
   const dayStart = new Date(now - DAY_MS).toISOString();
 
-  const [minute, day] = await Promise.all([
-    client
-      .from("agent_logs")
-      .select("id", { count: "exact", head: true })
-      .in("student_id", studentIds)
-      .gte("created_at", minuteStart),
-    client
-      .from("agent_logs")
-      .select("id", { count: "exact", head: true })
-      .in("student_id", studentIds)
-      .gte("created_at", dayStart),
-  ]);
+  let minute: CountResult;
+  let day: CountResult;
+  try {
+    [minute, day] = await Promise.all([
+      source.countStudentLogs(studentIds, minuteStart),
+      source.countStudentLogs(studentIds, dayStart),
+    ]);
+  } catch {
+    return deny(FAILURE_RETRY_SECONDS);
+  }
 
-  if ((minute.count ?? 0) >= PARENT_MAX_PER_MINUTE) {
-    return { ok: false, retryAfterSeconds: Math.ceil(WINDOW_MS / 1000) };
-  }
-  if ((day.count ?? 0) >= PARENT_MAX_PER_DAY) {
-    return { ok: false, retryAfterSeconds: Math.ceil(DAY_MS / 1000) };
-  }
+  if (!isUsableCount(minute) || !isUsableCount(day)) return deny(FAILURE_RETRY_SECONDS);
+  if (minute.count >= PARENT_MAX_PER_MINUTE) return deny(Math.ceil(WINDOW_MS / 1000));
+  if (day.count >= PARENT_MAX_PER_DAY) return deny(Math.ceil(DAY_MS / 1000));
   return { ok: true, retryAfterSeconds: 0 };
+}
+
+export async function checkParentAgentRateLimit(parentId: string): Promise<RateLimitResult> {
+  return checkParentAgentRateLimitWithSource(sourceFor(db()), parentId);
 }
 
 /** Standard 429 response body + Retry-After header. */
