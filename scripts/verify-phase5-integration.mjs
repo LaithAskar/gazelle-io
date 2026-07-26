@@ -19,12 +19,29 @@ function assertNotIncludes(file, source, needle, description) {
   }
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function assertFailClosedGuard(file, source, helperCall, status, description) {
+  const call = escapeRegExp(helperCall);
+  const guard = new RegExp(
+    `if\\s*\\(\\s*!${call}\\s*\\)\\s*(?:\\{\\s*)?return\\s+NextResponse\\.json\\([\\s\\S]{0,180}?status:\\s*${status}`,
+  );
+  if (!guard.test(source)) {
+    throw new Error(
+      `${file}: ${description} must negate ${helperCall} and immediately return status ${status}`,
+    );
+  }
+}
+
 const files = {
   parentProfile: "apps/web/app/api/parent/profile/route.ts",
   students: "apps/web/app/api/students/route.ts",
   studentById: "apps/web/app/api/students/[id]/route.ts",
   sessions: "apps/web/app/api/sessions/route.ts",
   sessionStart: "apps/web/app/api/sessions/start/route.ts",
+  sessionNext: "apps/web/app/api/sessions/next/route.ts",
   sessionRespond: "apps/web/app/api/sessions/respond/route.ts",
   sessionEnd: "apps/web/app/api/sessions/end/route.ts",
   tutor: "packages/agents/tutor/src/tutor.ts",
@@ -42,9 +59,13 @@ for (const [key, path] of Object.entries(files)) {
 assertIncludes(files.students, sources.students, "parent_id: current.parent.id", "student creation scoped to current parent");
 assertIncludes(files.studentById, sources.studentById, "student.parent_id !== current.parent.id", "student detail scoped to current parent");
 assertIncludes(files.sessions, sources.sessions, "ownedStudentIds", "session list limited to owned students");
-assertIncludes(files.sessionStart, sources.sessionStart, "student.parent_id !== current.parent.id", "start route ownership check");
-assertIncludes(files.sessionRespond, sources.sessionRespond, "session.student_id !== studentId", "response session/student match check");
-assertIncludes(files.sessionEnd, sources.sessionEnd, "student.parent_id !== current.parent.id", "end route ownership check");
+assertFailClosedGuard(files.sessions, sources.sessions, "isOwnedStudent(current.parent.id, student)", 403, "session list ownership guard");
+assertFailClosedGuard(files.sessionStart, sources.sessionStart, "isOwnedStudent(current.parent.id, student)", 403, "start route ownership guard");
+assertFailClosedGuard(files.sessionNext, sources.sessionNext, "isOwnedStudent(current.parent.id, student)", 403, "next route student ownership guard");
+assertFailClosedGuard(files.sessionNext, sources.sessionNext, "isSessionForStudent(studentId, session)", 404, "next route session ownership guard");
+assertFailClosedGuard(files.sessionRespond, sources.sessionRespond, "isOwnedStudent(current.parent.id, student)", 403, "response route student ownership guard");
+assertFailClosedGuard(files.sessionRespond, sources.sessionRespond, "isSessionForStudent(studentId, session)", 403, "response route session ownership guard");
+assertFailClosedGuard(files.sessionEnd, sources.sessionEnd, "isOwnedStudent(current.parent.id, student)", 403, "end route ownership guard");
 
 assertIncludes(files.sessionStart, sources.sessionStart, "serializeQuestion", "start route response serializer");
 const serializerMatch = sources.sessionStart.match(/function serializeQuestion[\s\S]*?\n}/);
@@ -59,4 +80,4 @@ assertIncludes(files.tutor, sources.tutor, "ended_at", "cleanup ended_at timesta
 assertIncludes(files.tutor, sources.tutor, "ContentRejectedError", "strict filter rejection handling");
 
 console.log("Phase 5 integration contract checks passed.");
-console.log("Checked parent/student/session API auth ownership, iOS answer hiding, and rejected initial-question cleanup.");
+console.log("Checked fail-closed session/next ownership guards, parent auth, iOS answer hiding, and rejected initial-question cleanup.");

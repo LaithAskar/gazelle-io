@@ -1,5 +1,6 @@
 import { getCurrentParent } from "@/lib/current-parent";
 import { createRequestClient } from "@/lib/supabase/server";
+import { isOwnedStudent } from "@/lib/session-ownership";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -22,7 +23,7 @@ export async function GET(req: Request) {
       .maybeSingle();
     if (error) return NextResponse.json({ error: "Failed to verify student ownership" }, { status: 500 });
     if (!student) return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    if (student.parent_id !== current.parent.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!isOwnedStudent(current.parent.id, student)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     ownedStudentIds = [student.id];
   } else {
     const { data: students, error } = await supabase
