@@ -210,7 +210,7 @@ gazelle/
 │   └── apify/                 # Curriculum scraping jobs
 └── docs/
     ├── spec.md                # This document
-    ├── cowork-brief.md        # Build contract
+    ├── IMPLEMENTATION_BRIEF.md # Implementation contract
     └── supabase/              # Setup guide + SQL reference
 ```
 ---

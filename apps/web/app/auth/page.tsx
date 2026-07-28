@@ -4,6 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+function friendlyAuthError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err ?? "Something went wrong.");
+  const lower = raw.toLowerCase();
+
+  if (lower.includes("load failed") || lower.includes("fetch failed") || lower.includes("failed to fetch")) {
+    return "Could not reach Supabase. The project may be paused or the local network is blocking the request. Unpause the Supabase project, then try again.";
+  }
+
+  return raw;
+}
+
 export default function AuthPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -69,7 +80,7 @@ export default function AuthPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(friendlyAuthError(err));
     } finally {
       setBusy(false);
     }

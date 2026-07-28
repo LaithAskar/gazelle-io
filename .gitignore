@@ -53,3 +53,6 @@ supabase/.temp/
 
 # ---- Claude Code local settings (personal, not shared) ----
 .claude/settings.local.json
+
+# ---- Local agent handoffs / internal workflow metadata ----
+.hermes/

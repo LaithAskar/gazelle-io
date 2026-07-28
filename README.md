@@ -12,6 +12,16 @@ This repository is a portfolio/demo build. It should not be described as having 
 - SwiftUI iOS project surface for parent auth, student profiles, tutor sessions, summaries, and settings/data deletion flows.
 - Safety-oriented integration contract covering parent-owned student/session APIs, answer hiding, and fail-closed Tutor behavior.
 
+## Demo walkthrough and launch assets
+
+This repo now includes practical demo/launch materials for an honest portfolio presentation:
+
+- `docs/DEMO_SCRIPT.md` — 60-90 second walkthrough script plus a step-by-step web/iOS demo route.
+- `docs/SCREENSHOT_CHECKLIST.md` — exact screenshots to capture for landing page, GitHub, LinkedIn, and portfolio use.
+- `docs/LAUNCH_COPY.md` — LinkedIn post drafts, recruiter DM copy, portfolio blurb, and wording to avoid.
+
+Use these assets only for demo/recruiting/portfolio sharing. Do not imply production users, App Store availability, paid customers, school adoption, or compliance certification unless that evidence is added later.
+
 ## Architecture at a glance
 
 | Area | Implementation |
@@ -77,8 +87,8 @@ pnpm build
 
 ## Primary docs
 
-- `AGENTS.md` / `CLAUDE.md` — current project context and locked decisions.
+- `PROJECT_CONTEXT.md` — current project context and locked decisions.
 - `docs/spec.md` — product specification.
-- `docs/cowork-brief.md` — phase-by-phase build contract.
+- `docs/IMPLEMENTATION_BRIEF.md` — phase-by-phase implementation contract.
 - `docs/PHASE5_IOS_VALIDATION.md` — manual iOS and API validation checklist.
 - `docs/DEPLOY.md` — deployment notes.

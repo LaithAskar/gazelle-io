@@ -1,18 +1,16 @@
-# AGENTS.md — Gazelle.io
-> This file is read by Codex at the start of every session. It is the single source of truth for project context, locked decisions, and build rules. Keep it concise and current. If anything here conflicts with `docs/spec.md`, the spec wins on *product detail* — but the **Locked Decisions** and **Do NOT Do** sections below override everything.
+# Gazelle.io — Project Context
+> This is the source of truth for project context, locked decisions, and build rules. Keep it concise and current. If anything here conflicts with `docs/spec.md`, the spec wins on *product detail* — but the **Locked Decisions** and **Do NOT Do** sections below override everything.
 ---
 ## What Gazelle.io Is
 Gazelle.io is an AI-powered adaptive learning platform for K-6 students (ages 5–12). It serves three user types — **students, parents, and teachers** — across two frontends: a native iOS app (students/parents) and a Next.js web dashboard (teachers). Three embedded AI agents drive the core experience, backed by a RAG knowledge base built from open source curriculum content.
 **MVP target:** 100 free users in the US. Zero monetization logic in v1.
 ---
-## Your Role (Codex)
-You are the contractor. The architect (Laith) has already made every major decision. Your job is to **implement them cleanly and flag anything ambiguous — not resolve it yourself.**
-**When in doubt: stop and ask. Do not guess. Do not invent.**
-The architect reviews every phase before the next phase begins. Checkpoint after each phase.
+## Governance
+Laith owns the product and architecture decisions. Ambiguous product decisions require his review rather than undocumented assumptions. Each phase is reviewed before the next begins.
 ---
-## Read Order (do this first, every fresh session)
-1. `AGENTS.md` (this file)
-2. `docs/cowork-brief.md` — the phase-by-phase build contract
+## Documentation order
+1. `PROJECT_CONTEXT.md` (this file)
+2. `docs/IMPLEMENTATION_BRIEF.md` — the phase-by-phase implementation contract
 3. `docs/spec.md` — full product specification (source of truth for product detail)
 Confirm you've read all three and summarize the key constraints back before doing anything.
 ---
@@ -25,12 +23,12 @@ Confirm you've read all three and summarize the key constraints back before doin
 | Database / Auth / Storage | Supabase (already initialized) |
 | Vector Store | Supabase pgvector (already enabled) |
 | Agent Framework | Mastra (TypeScript, self-hosted on Vercel — NOT Mastra cloud) |
-| AI Model | Codex-sonnet-4 via Anthropic API |
+| AI Model | claude-sonnet-4-6 via Anthropic API |
 | Scraping | Apify |
 | Monorepo | Turborepo |
 | Languages | TypeScript (backend/web), Swift (iOS) — no mixing |
 Do not introduce new libraries, frameworks, or tools without explicit architect approval. If you think something is missing, **flag it — don't add it.**
-> Note for the architect: confirm the current Anthropic model string before the first agent build — model identifiers change over time, and the spec was written against `Codex-sonnet-4`.
+> Confirm the current Anthropic model string before model upgrades — identifiers change over time, and older specifications may use stale names.
 ---
 ## The Three Agents
 | Agent | Where it lives | What it does |
@@ -43,7 +41,7 @@ All three agents query a shared RAG knowledge base. The three agents communicati
 ## Repository Structure
 ```
 gazelle/
-├── AGENTS.md                  # This file
+├── PROJECT_CONTEXT.md         # Project context and locked decisions
 ├── README.md
 ├── .env.example               # Every required key, empty values
 ├── apps/
@@ -61,7 +59,7 @@ gazelle/
 │   └── apify/                 # Curriculum scraping jobs
 └── docs/
     ├── spec.md                # Full product specification (v0.2)
-    ├── cowork-brief.md        # Agent build contract
+    ├── IMPLEMENTATION_BRIEF.md # Phase-by-phase implementation contract
     └── supabase/
         ├── SUPABASE_SETUP.md
         ├── migrations/001_initial_schema.sql
@@ -103,8 +101,10 @@ Copy `.env.example` to `.env.local` and fill in real values locally. Required ke
 - **Phase 1 (shared foundation): ✅ done.** `packages/shared` (types generated from live schema + enums + Zod env validation), `packages/db` (anon + service-role clients, typed query helpers). Verified: type-check clean, both clients connect to the live DB, env validation fails fast.
 - **Phase 2 (RAG pipeline): ✅ done & verified.** `packages/rag` (Voyage voyage-3.5 embeddings via REST, ~500-token chunker, batched ingest, semantic search via `match_curriculum_knowledge` RPC). Seeded 22 real Common Core standards (K-6, math+ELA) into `curriculum_knowledge`. Verified: semantic search returns correct standards by meaning. NOTE: Voyage free tier is 3 RPM until a payment method is added (200M free tokens still apply) — raise this before heavy agent testing. **Apify scraping deferred** (seeded directly instead).
 - `.env.local` (gitignored) now holds live Supabase values + real ANTHROPIC + VOYAGE keys. APIFY key still pending (post-MVP).
-- **Phase 3 (Mastra agents): ⏭️ next.** Use model id `Codex-sonnet-4-6` (spec's `Codex-sonnet-4` is stale).
+- **Phase 3 (Mastra agents): ✅ done & verified.** Model id `claude-sonnet-4-6` via `@ai-sdk/anthropic` (spec's `claude-sonnet-4` is stale). New shared `packages/agents/core` (@gazelle/agent-core): model binding, lazy service client, v1 rule-based content filter, agent_logs review protocol, JSON extraction. **Planner** (RAG-grounded lesson plans → draft, question bank), **Tutor** (grade-matched, sentence-capped, strict filter, structured-only session data), **Curriculum** (ingest, aggregated class analysis, at-risk detection, insight reports; Apify deferred). All verified live against the DB; every output logs to agent_logs and is filtered before surfacing.
+- **Phase 4 (Next.js teacher dashboard): ✅ done & verified.** `apps/web` — Next.js 14 App Router, Tailwind, Supabase SSR auth (email/password, autoconfirm enabled on the live project), middleware route protection. Pages: /auth, /dashboard (recent lessons + weekly insight), /lessons, /lessons/new (Planner generate), /lessons/[id] (view + approve → question bank), /students. Server-only API routes (`/api/lessons/generate`, `/api/lessons/[id]/approve`, `/api/insights`) invoke the agents with the service role. Verified: production build clean, server boots, routes + auth redirect work, signup self-bootstrap works under RLS.
+  - Improvements made this phase: enabled Supabase `mailer_autoconfirm` (was off, contradicting setup doc); added Voyage 429 retry/backoff; removed the Planner's redundant autonomous RAG tool (deterministic prefetch already grounds it) to halve Voyage calls per generation.
+  - To run locally: env must be loaded for Next (root `.env.local`), and in THIS shell the empty `ANTHROPIC_API_KEY` must be overridden. Voyage free tier 3 RPM still applies to in-browser generation until a payment method is added.
+- **Phase 5 (iOS app): ✅ done & integration-contract verified.** SwiftUI iOS surface for parent auth, student profile management, tutor sessions, parent summaries, settings/data deletion flows, and client-safe config only. `pnpm verify:phase5` checks parent/student/session API auth ownership, hidden answers, and rejected initial-question cleanup.
 Update this section as phases complete.
 ---
-## First Action
-Scaffold the Turborepo monorepo structure from the layout above — **folder structure and config files only. No package installs, no logic.** Then stop and wait for architect approval before Phase 1 begins.
