@@ -27,8 +27,9 @@ Values are in your local `.env.local` — do NOT commit them.
 Set them for **Production** (and Preview if you want PR previews).
 
 ## 3. Deploy
-Click **Deploy**. First build takes a few minutes. You'll get a URL like
-`https://gazelle-io.vercel.app`.
+Click **Deploy**. First build takes a few minutes. The current Vercel project is
+`gazelle-io-web`, so the public production URL should be
+`https://gazelle-io-web.vercel.app` unless you add a custom domain.
 
 ### Confirm Fluid Compute is on (free-plan timeout fix)
 Lesson generation takes ~15–30s (Claude + Voyage). The Hobby default function
@@ -47,7 +48,9 @@ In the Supabase dashboard → **Authentication → URL Configuration**:
 localhost for continued local work.)
 
 ## 5. Smoke-test production
-- Visit the URL → should redirect to `/auth`.
+- Visit the URL → public landing page should load; protected pages should redirect to `/auth`.
+- If the URL returns `MIDDLEWARE_INVOCATION_FAILED`, confirm the Production env vars above exist in Vercel.
+- If preview/deployment URLs redirect to `vercel.com/sso-api`, Vercel Deployment Protection is on; disable it for public demos or use the production domain.
 - Sign up → land on the dashboard.
 - Create a lesson plan → approve → confirm the question bank generates.
 
