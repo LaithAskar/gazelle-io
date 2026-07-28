@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-27
 **Scope:** Full repo — Supabase RLS, web auth, API routes, secret handling, the three AI agents (Tutor / Planner / Curriculum), and the content-filter pipeline.
-**Reviewer:** Claude Code (automated security review)
+**Review type:** Automated repository security audit
 
 ---
 
@@ -60,7 +60,7 @@ TikTok-clip sense — not data theft, but cost abuse.
 **Fix:** Add a simple per-user rate limit (e.g. N generations per minute/day) on
 the three agent routes. A small in-memory or Supabase-backed counter is enough
 for the MVP; a managed limiter (Upstash) later. *Adding a library needs
-architect approval per CLAUDE.md — flagging, not adding.*
+project approval under `PROJECT_CONTEXT.md` — flagging, not adding.*
 
 ### 2. Open self-service signup + self-assigned "teacher" role — **MEDIUM**
 
@@ -149,7 +149,7 @@ they need your sign-off first per the project's checkpoint rule.
 
 ## Remediation status (2026-06-27)
 
-Implemented in code on branch `claude/gazelle-security-audit-i39dcf`
+Implemented in the post-Phase-5 security-hardening work.
 (type-check + `next build` pass; no migrations touched):
 
 - **#1 Rate limiting — DONE.** `apps/web/lib/rate-limit.ts` caps each teacher at
@@ -179,7 +179,7 @@ Implemented in code on branch `claude/gazelle-security-audit-i39dcf`
 - **Turn OFF `mailer_autoconfirm`** in the Supabase dashboard
   (Authentication → Providers → Email → "Confirm email"). Until this is flipped,
   signup is still auto-confirmed and the email-confirmation code path above stays
-  dormant. (Note: the live project currently has auto-confirm ON — see CLAUDE.md.)
+  dormant. (Note: the live project currently has auto-confirm ON — see `PROJECT_CONTEXT.md`.)
 - **#2 role self-assignment — severity DOWNGRADED on re-review (2026-07-08).**
   The schema was already stricter than this audit credited: `users.role` has a
   table-level `CHECK (role IN ('parent','teacher'))` in `001_initial_schema.sql`,

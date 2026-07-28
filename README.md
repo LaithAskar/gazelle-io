@@ -87,8 +87,8 @@ pnpm build
 
 ## Primary docs
 
-- `AGENTS.md` / `CLAUDE.md` — current project context and locked decisions.
+- `PROJECT_CONTEXT.md` — current project context and locked decisions.
 - `docs/spec.md` — product specification.
-- `docs/cowork-brief.md` — phase-by-phase build contract.
+- `docs/IMPLEMENTATION_BRIEF.md` — phase-by-phase implementation contract.
 - `docs/PHASE5_IOS_VALIDATION.md` — manual iOS and API validation checklist.
 - `docs/DEPLOY.md` — deployment notes.

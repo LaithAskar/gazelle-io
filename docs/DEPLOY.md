@@ -59,5 +59,5 @@ localhost for continued local work.)
   generation makes Anthropic + Voyage calls; keep an eye on function duration on
   the Hobby plan (10s) — if generation times out, raise it on Pro or move
   generation to a background job (see the Curriculum-agent timeout note in
-  CLAUDE.md / the build brief).
+  `PROJECT_CONTEXT.md` / the implementation brief).
 - Rotate any keys that were shared in plaintext before going to real users.

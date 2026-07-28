@@ -1,8 +1,8 @@
 # Gazelle.io — Build Brief
-**For:** The AI agent doing development (Claude Code / Cowork)
-**From:** Laith (Architect)
+**Owner:** Laith Askar
+**Purpose:** Phase-by-phase implementation requirements and locked engineering decisions
 **Version:** 1.0
-**Read this entire document before writing a single line of code.**
+This document records the implementation sequence and acceptance criteria.
 
 ---
 
@@ -12,11 +12,9 @@ Gazelle.io is an AI-powered adaptive learning platform for K-6 students (ages 5�
 
 ---
 
-## Your Role
+## Decision ownership
 
-You are the contractor. The architect has made all major decisions. Your job is to implement them cleanly and flag anything ambiguous — not resolve it yourself.
-
-**When in doubt: stop and ask. Do not guess.**
+Laith owns major product and architecture decisions. Ambiguities require explicit review rather than undocumented assumptions.
 
 ---
 

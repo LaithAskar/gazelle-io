@@ -1,6 +1,6 @@
 # apps/web — Teacher Dashboard (Next.js 14)
 
-**Status:** placeholder — scaffolded in **Phase 4** of `docs/cowork-brief.md`.
+**Status:** placeholder — scaffolded in **Phase 4** of `docs/IMPLEMENTATION_BRIEF.md`.
 
 This will be the Next.js 14 + React + TypeScript teacher dashboard (Tailwind only),
 deployed on Vercel, hosting the Planner Agent interface and the Mastra agent API routes.

@@ -1,18 +1,16 @@
-# CLAUDE.md — Gazelle.io
-> This file is read by Claude Code at the start of every session. It is the single source of truth for project context, locked decisions, and build rules. Keep it concise and current. If anything here conflicts with `docs/spec.md`, the spec wins on *product detail* — but the **Locked Decisions** and **Do NOT Do** sections below override everything.
+# Gazelle.io — Project Context
+> This is the source of truth for project context, locked decisions, and build rules. Keep it concise and current. If anything here conflicts with `docs/spec.md`, the spec wins on *product detail* — but the **Locked Decisions** and **Do NOT Do** sections below override everything.
 ---
 ## What Gazelle.io Is
 Gazelle.io is an AI-powered adaptive learning platform for K-6 students (ages 5–12). It serves three user types — **students, parents, and teachers** — across two frontends: a native iOS app (students/parents) and a Next.js web dashboard (teachers). Three embedded AI agents drive the core experience, backed by a RAG knowledge base built from open source curriculum content.
 **MVP target:** 100 free users in the US. Zero monetization logic in v1.
 ---
-## Your Role (Claude Code)
-You are the contractor. The architect (Laith) has already made every major decision. Your job is to **implement them cleanly and flag anything ambiguous — not resolve it yourself.**
-**When in doubt: stop and ask. Do not guess. Do not invent.**
-The architect reviews every phase before the next phase begins. Checkpoint after each phase.
+## Governance
+Laith owns the product and architecture decisions. Ambiguous product decisions require his review rather than undocumented assumptions. Each phase is reviewed before the next begins.
 ---
-## Read Order (do this first, every fresh session)
-1. `CLAUDE.md` (this file)
-2. `docs/cowork-brief.md` — the phase-by-phase build contract
+## Documentation order
+1. `PROJECT_CONTEXT.md` (this file)
+2. `docs/IMPLEMENTATION_BRIEF.md` — the phase-by-phase implementation contract
 3. `docs/spec.md` — full product specification (source of truth for product detail)
 Confirm you've read all three and summarize the key constraints back before doing anything.
 ---
@@ -25,12 +23,12 @@ Confirm you've read all three and summarize the key constraints back before doin
 | Database / Auth / Storage | Supabase (already initialized) |
 | Vector Store | Supabase pgvector (already enabled) |
 | Agent Framework | Mastra (TypeScript, self-hosted on Vercel — NOT Mastra cloud) |
-| AI Model | claude-sonnet-4 via Anthropic API |
+| AI Model | claude-sonnet-4-6 via Anthropic API |
 | Scraping | Apify |
 | Monorepo | Turborepo |
 | Languages | TypeScript (backend/web), Swift (iOS) — no mixing |
 Do not introduce new libraries, frameworks, or tools without explicit architect approval. If you think something is missing, **flag it — don't add it.**
-> Note for the architect: confirm the current Anthropic model string before the first agent build — model identifiers change over time, and the spec was written against `claude-sonnet-4`.
+> Confirm the current Anthropic model string before model upgrades — identifiers change over time, and older specifications may use stale names.
 ---
 ## The Three Agents
 | Agent | Where it lives | What it does |
@@ -43,7 +41,7 @@ All three agents query a shared RAG knowledge base. The three agents communicati
 ## Repository Structure
 ```
 gazelle/
-├── CLAUDE.md                  # This file
+├── PROJECT_CONTEXT.md         # Project context and locked decisions
 ├── README.md
 ├── .env.example               # Every required key, empty values
 ├── apps/
@@ -61,7 +59,7 @@ gazelle/
 │   └── apify/                 # Curriculum scraping jobs
 └── docs/
     ├── spec.md                # Full product specification (v0.2)
-    ├── cowork-brief.md        # Agent build contract
+    ├── IMPLEMENTATION_BRIEF.md # Phase-by-phase implementation contract
     └── supabase/
         ├── SUPABASE_SETUP.md
         ├── migrations/001_initial_schema.sql
@@ -107,15 +105,6 @@ Copy `.env.example` to `.env.local` and fill in real values locally. Required ke
 - **Phase 4 (Next.js teacher dashboard): ✅ done & verified.** `apps/web` — Next.js 14 App Router, Tailwind, Supabase SSR auth (email/password, autoconfirm enabled on the live project), middleware route protection. Pages: /auth, /dashboard (recent lessons + weekly insight), /lessons, /lessons/new (Planner generate), /lessons/[id] (view + approve → question bank), /students. Server-only API routes (`/api/lessons/generate`, `/api/lessons/[id]/approve`, `/api/insights`) invoke the agents with the service role. Verified: production build clean, server boots, routes + auth redirect work, signup self-bootstrap works under RLS.
   - Improvements made this phase: enabled Supabase `mailer_autoconfirm` (was off, contradicting setup doc); added Voyage 429 retry/backoff; removed the Planner's redundant autonomous RAG tool (deterministic prefetch already grounds it) to halve Voyage calls per generation.
   - To run locally: env must be loaded for Next (root `.env.local`), and in THIS shell the empty `ANTHROPIC_API_KEY` must be overridden. Voyage free tier 3 RPM still applies to in-browser generation until a payment method is added.
-- **Phase 5 (iOS app): ✅ done (built on `feat/gazelle-phase-5-ios`).** SwiftUI app (parent auth, student profiles, live tutor sessions), parent-scoped API routes, public landing page.
-- **Post-Phase-5 hardening & product round (2026-07-08, branch `claude/gazelle-security-audit-i39dcf`):**
-  - Security branch **merged** with Phase 5 (rate limiting, prompt-injection delimiters, PII redaction, security headers, email-confirm signup flow all now coexist with the iOS work). Parent-keyed rate limits added to `/api/sessions/start|respond|next` (12/min, 300/day per family).
-  - iOS auth tokens moved from UserDefaults to the **Keychain** (with one-time migration).
-  - **Class codes**: teachers get a 6-char code (auto-generated, shown on /students); parents enter it in iOS to link a student → activates lesson-grounded tutoring. ⚠️ Requires `docs/supabase/migrations/005_class_codes.sql` — **NOT yet applied to the live DB**; architect must run it in the Supabase SQL editor. `database.types.ts` was hand-updated to match; regenerate after applying.
-  - **Multi-question sessions + rewards**: new `/api/sessions/next` (difficulty ladder from last answer), end-of-session stars + day-streak celebration in iOS (`streakDays` computed in `/api/sessions/end`, UTC-based).
-  - **Question-bank-first Tutor**: sessions serve the Planner's pre-approved bank questions when available (strict-filtered + agent_logs-logged like all output), falling back to live generation — cuts Claude calls and latency per question.
-  - Verified: all packages type-check, web production build clean, `verify-phase5-integration.mjs` passes. Swift changes are **not yet compiled** (no Xcode in the cloud env) — validate per `docs/PHASE5_IOS_VALIDATION.md`.
+- **Phase 5 (iOS app): ✅ done & integration-contract verified.** SwiftUI iOS surface for parent auth, student profile management, tutor sessions, parent summaries, settings/data deletion flows, and client-safe config only. `pnpm verify:phase5` checks parent/student/session API auth ownership, hidden answers, and rejected initial-question cleanup.
 Update this section as phases complete.
 ---
-## First Action
-Scaffold the Turborepo monorepo structure from the layout above — **folder structure and config files only. No package installs, no logic.** Then stop and wait for architect approval before Phase 1 begins.
